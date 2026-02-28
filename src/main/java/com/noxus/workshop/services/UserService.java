@@ -2,8 +2,11 @@ package com.noxus.workshop.services;
 
 import com.noxus.workshop.entities.User;
 import com.noxus.workshop.repositories.UserRepository;
+import com.noxus.workshop.services.exceptions.DatabaseException;
 import com.noxus.workshop.services.exceptions.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,7 +32,14 @@ public class UserService {
     }
 
     public void delete(Long id) {
-        repository.deleteById(id);
+        try {
+            if (!repository.existsById(id)) {
+                throw new ResourceNotFoundException(id);
+            }
+            repository.deleteById(id);
+        } catch (DataIntegrityViolationException e) {
+            throw new DatabaseException(e.getMessage());
+        }
     }
 
     public User update(Long id, User obj) {
